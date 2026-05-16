@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${student.name} + ' – Campus EMS Admin'">Student Detail</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main>
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <div style="margin-bottom:1.25rem;">
+        <a th:href="@{/admin/students}" class="text-muted">← Back to Students</a>
+    </div>
+
+    <!-- Student Profile Card -->
+    <div class="form-card form-card-wide" style="margin-bottom:1.5rem;">
+        <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+            <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#7c3aed);
+                        display:flex;align-items:center;justify-content:center;font-size:2rem;color:white;flex-shrink:0;">
+                👤
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:1.5rem;font-weight:800;color:var(--dark);" th:text="${student.name}"></div>
+                <div class="text-muted" th:text="${student.email}"></div>
+                <div style="display:flex;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap;">
+                    <span class="badge badge-blue" th:text="${student.department}"></span>
+                    <span class="badge badge-purple" th:if="${student.year != null and student.year != ''}"
+                          th:text="${student.year}"></span>
+                    <span class="badge badge-green" th:if="${student.phone != null and student.phone != ''}"
+                          th:text="'📞 ' + ${student.phone}"></span>
+                </div>
+            </div>
+            <div>
+                <form th:action="@{/admin/students/{id}/delete(id=${student.id})}"
+                      method="post" class="confirm-delete">
+                    <button type="submit" class="btn btn-danger btn-sm">🗑️ Delete Student</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration History -->
+    <div class="section-title">🎫 Registration History
+        <span class="badge badge-blue" style="font-size:0.8rem;" th:text="${#lists.size(registrations)} + ' total'"></span>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Event</th>
+                    <th>Type</th>
+                    <th>Event Date</th>
+                    <th>Registered On</th>
+                    <th>Status</th>
+                    <th>Feedback</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="reg, idx : ${registrations}">
+                    <td th:text="${idx.count}" style="color:var(--gray-400);font-size:0.82rem;"></td>
+                    <td>
+                        <div style="font-weight:600;" th:text="${reg.event.title}"></div>
+                        <div class="text-muted">📍 <span th:text="${reg.event.venue}"></span></div>
+                    </td>
+                    <td><span class="badge badge-blue" th:text="${reg.event.eventType}"></span></td>
+                    <td th:text="${#temporals.format(reg.event.eventDate,'dd MMM yyyy')}"></td>
+                    <td th:text="${#temporals.format(reg.registeredAt,'dd MMM yyyy')}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${reg.status == 'CONFIRMED'} ? 'badge-green' : 'badge-red'"
+                              th:text="${reg.status}"></span>
+                    </td>
+                    <td>
+                        <span th:if="${reg.feedbackRating != null}">
+                            <span th:each="i : ${#numbers.sequence(1, reg.feedbackRating)}">⭐</span>
+                            <span class="text-muted" th:text="'(' + ${reg.feedbackRating} + '/5)'"></span>
+                        </span>
+                        <span th:if="${reg.feedbackRating == null}" class="text-muted">—</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(registrations)}">
+                    <td colspan="7" style="text-align:center;color:var(--gray-400);padding:2rem;">
+                        This student has no registrations yet.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Error - Campus EMS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<main>
+    <div class="empty-state" style="padding:5rem 2rem;">
+        <span class="empty-icon" th:text="${errorCode == '404'} ? '🔍' : '⚠️'">⚠️</span>
+        <h2 style="font-size:1.5rem;font-weight:800;color:var(--dark);" th:text="${errorTitle}">Error</h2>
+        <p style="margin-top:0.5rem;" th:text="${errorMessage}">Something went wrong.</p>
+        <a th:href="@{/}" class="btn btn-primary mt-3">🏠 Go Home</a>
+    </div>
+</main>
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>

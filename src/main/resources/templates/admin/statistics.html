@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Statistics – Campus EMS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main>
+    <div class="page-header">
+        <div>
+            <div class="page-title">📊 Event Statistics</div>
+            <div class="page-subtitle">Registration analytics and insights for all campus events</div>
+        </div>
+        <a th:href="@{/admin/dashboard}" class="btn btn-outline">← Dashboard</a>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number" th:text="${stats.totalEvents}">0</div>
+            <div class="stat-label">📅 Total Events</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-number" th:text="${stats.totalRegistrations != null ? stats.totalRegistrations : 0}">0</div>
+            <div class="stat-label">🎫 Total Registrations</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-number" th:text="${stats.upcomingCount}">0</div>
+            <div class="stat-label">🔥 Upcoming Events</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-number"
+                 th:text="${stats.totalEvents > 0 and stats.totalRegistrations != null ?
+                            #numbers.formatDecimal(stats.totalRegistrations * 1.0 / stats.totalEvents, 0, 1) : '0'}">0</div>
+            <div class="stat-label">📈 Avg Registrations/Event</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <div class="section-title">🎯 Events by Type</div>
+            <canvas id="typeChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="section-title">🏢 Events by Department</div>
+            <canvas id="deptChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <div class="section-title">📌 Events by Status</div>
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Top Events Table -->
+    <div class="section-title" style="margin-top:2rem;">🏆 Top Events by Registrations</div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Event Title</th>
+                    <th>Type</th>
+                    <th>Department</th>
+                    <th>Date</th>
+                    <th>Registrations</th>
+                    <th>Capacity</th>
+                    <th>Fill Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="event, idx : ${stats.topEvents}">
+                    <td style="font-size:1.2rem;">
+                        <span th:if="${idx.index == 0}">🥇</span>
+                        <span th:if="${idx.index == 1}">🥈</span>
+                        <span th:if="${idx.index == 2}">🥉</span>
+                        <span th:if="${idx.index > 2}" th:text="${idx.count}"></span>
+                    </td>
+                    <td>
+                        <div style="font-weight:600;" th:text="${event.title}"></div>
+                        <div class="text-muted" th:text="'by ' + ${event.organizer}"></div>
+                    </td>
+                    <td><span class="badge badge-blue" th:text="${event.eventType}"></span></td>
+                    <td th:text="${event.department}"></td>
+                    <td th:text="${#temporals.format(event.eventDate,'dd MMM yyyy')}"></td>
+                    <td><strong th:text="${event.registeredCount}"></strong></td>
+                    <td th:text="${event.totalCapacity}"></td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <div class="progress-bar-container" style="width:70px;">
+                                <div class="progress-bar"
+                                     th:attr="data-percent=${event.totalCapacity > 0 ? (event.registeredCount * 100 / event.totalCapacity) : 0}"></div>
+                            </div>
+                            <span class="text-muted"
+                                  th:text="${event.totalCapacity > 0 ? #numbers.formatDecimal(event.registeredCount * 100.0 / event.totalCapacity, 0, 0) + '%' : '0%'}"></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(stats.topEvents)}">
+                    <td colspan="8" style="text-align:center;color:var(--gray-400);padding:2rem;">No events yet.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+<script th:src="@{/js/app.js}"></script>
+<script th:inline="javascript">
+    const typeData   = /*[[${stats.countByType}]]*/ [];
+    const deptData   = /*[[${stats.countByDepartment}]]*/ [];
+    const statusData = /*[[${stats.countByStatus}]]*/ [];
+
+    const COLORS = ['#1a56db','#0e9f6e','#f59e0b','#7c3aed','#f05252','#06b6d4','#84cc16'];
+
+    function makeChart(id, type, labels, data, label) {
+        const ctx = document.getElementById(id);
+        if (!ctx || !labels.length) return;
+        new Chart(ctx, {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label || 'Count',
+                    data: data,
+                    backgroundColor: COLORS,
+                    borderColor: type === 'bar' ? COLORS[0] : COLORS,
+                    borderWidth: type === 'bar' ? 0 : 2,
+                    borderRadius: type === 'bar' ? 6 : 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: type === 'bar' ? 'top' : 'bottom', labels: { padding: 16 } }
+                },
+                scales: type === 'bar' ? { y: { beginAtZero: true, ticks: { stepSize: 1 } } } : {}
+            }
+        });
+    }
+
+    makeChart('typeChart',   'doughnut', typeData.map(d=>d[0]),   typeData.map(d=>d[1]));
+    makeChart('deptChart',   'bar',      deptData.map(d=>d[0]),   deptData.map(d=>d[1]), 'Events');
+    makeChart('statusChart', 'pie',      statusData.map(d=>d[0]), statusData.map(d=>d[1]));
+</script>
+</body>
+</html>

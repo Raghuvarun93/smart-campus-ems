@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<!-- ======== NAVBAR FRAGMENT ======== -->
+<nav th:fragment="navbar" class="navbar">
+    <div class="nav-container">
+        <a th:href="@{/}" class="nav-brand">
+            <span class="brand-icon">🎓</span>
+            <span>Campus<strong>EMS</strong></span>
+        </a>
+        <div class="nav-links">
+            <a th:href="@{/events}" class="nav-link">📅 Events</a>
+
+            <div sec:authorize="isAnonymous()">
+                <a th:href="@{/signup}" class="nav-link">✨ Sign Up</a>
+                <a th:href="@{/login}" class="nav-link btn-login">🔑 Login</a>
+            </div>
+
+            <div sec:authorize="isAuthenticated()" class="nav-dropdown">
+                <a th:href="@{/student/my-events}" class="nav-link" sec:authorize="hasRole('STUDENT')">📋 My Events</a>
+                <a th:href="@{/admin/dashboard}" class="nav-link" sec:authorize="hasRole('ADMIN')">⚙️ Admin</a>
+                <form th:action="@{/logout}" method="post" style="display:inline;">
+                    <button type="submit" class="nav-link btn-logout">🚪 Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- ======== FLASH MESSAGES FRAGMENT ======== -->
+<div th:fragment="flash-messages">
+    <div th:if="${successMessage}" class="alert alert-success">
+        <span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-error">
+        <span th:text="${errorMessage}"></span>
+    </div>
+</div>
+
+<!-- ======== FOOTER FRAGMENT ======== -->
+<footer th:fragment="footer" class="footer">
+    <div class="footer-content">
+        <p>🎓 <strong>Smart Campus EMS</strong> &mdash; Empowering Campus Life</p>
+        <p style="font-size:0.85rem; margin-top:0.3rem; opacity:0.7;">
+            Built with Spring Boot 3 + Thymeleaf + JPA &nbsp;|&nbsp; SDG 9: Industry, Innovation & Infrastructure
+        </p>
+    </div>
+</footer>
+
+</html>

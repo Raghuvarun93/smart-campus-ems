@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>My Events – Campus EMS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main>
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <div class="page-header">
+        <div>
+            <div class="page-title">📋 My Registered Events</div>
+            <div class="page-subtitle" th:if="${student != null}">
+                👋 Welcome, <strong th:text="${student.name}"></strong>
+                &nbsp;·&nbsp; <span th:text="${student.department}"></span>
+                <span th:if="${student.year != null and student.year != ''}"> &nbsp;·&nbsp; <span th:text="${student.year}"></span></span>
+            </div>
+        </div>
+        <a th:href="@{/events}" class="btn btn-primary">📅 Browse More Events</a>
+    </div>
+
+    <!-- No student profile linked -->
+    <div class="empty-state" th:if="${noProfile}">
+        <span class="empty-icon">👤</span>
+        <h3>No student profile linked</h3>
+        <p>Your account doesn't have a student profile yet. Create one to register for events.</p>
+        <a th:href="@{/student/register}" class="btn btn-primary mt-2">Create Student Profile</a>
+    </div>
+
+    <!-- Has profile -->
+    <div th:if="${student != null}">
+
+        <!-- Summary bar -->
+        <div class="stats-grid" th:if="${not #lists.isEmpty(registrations)}" style="margin-bottom:1.5rem;">
+            <div class="stat-card">
+                <div class="stat-number" th:text="${#lists.size(registrations)}">0</div>
+                <div class="stat-label">Total Registrations</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-number"
+                     th:text="${#lists.size(registrations.?[status == 'CONFIRMED'])}">0</div>
+                <div class="stat-label">✅ Confirmed</div>
+            </div>
+            <div class="stat-card orange">
+                <div class="stat-number"
+                     th:text="${#lists.size(registrations.?[status == 'CANCELLED'])}">0</div>
+                <div class="stat-label">❌ Cancelled</div>
+            </div>
+        </div>
+
+        <!-- Empty -->
+        <div class="empty-state" th:if="${#lists.isEmpty(registrations)}">
+            <span class="empty-icon">📭</span>
+            <h3>No registrations yet</h3>
+            <p>You haven't registered for any events. Browse upcoming events to get started.</p>
+            <a th:href="@{/events}" class="btn btn-primary mt-2">Browse Events</a>
+        </div>
+
+        <!-- Registration cards -->
+        <div class="cards-grid" th:if="${not #lists.isEmpty(registrations)}">
+            <div class="card" th:each="reg : ${registrations}">
+                <div class="card-header"
+                     th:classappend="${reg.status == 'CANCELLED'} ? 'red' :
+                                     (${reg.event.eventType == 'Cultural'} ? 'purple' :
+                                     (${reg.event.eventType == 'Competition'} ? 'green' :
+                                     (${reg.event.eventType == 'Sports'} ? 'orange' : '')))">
+                    <div style="font-size:0.75rem;opacity:0.85;display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.25rem;">
+                        <span th:text="${reg.event.eventType}"></span>
+                        <span>Registered: <span th:text="${#temporals.format(reg.registeredAt,'dd MMM yyyy')}"></span></span>
+                    </div>
+                    <div class="event-title" th:text="${reg.event.title}"></div>
+                </div>
+                <div class="card-body">
+                    <div class="event-meta">
+                        <span class="badge badge-blue">📅 <span th:text="${#temporals.format(reg.event.eventDate,'dd MMM yyyy')}"></span></span>
+                        <span class="badge badge-green">📍 <span th:text="${reg.event.venue}"></span></span>
+                        <span class="badge"
+                              th:classappend="${reg.status == 'CONFIRMED'} ? 'badge-green' : 'badge-red'"
+                              th:text="${reg.status}"></span>
+                    </div>
+
+                    <!-- CONFIRMED actions -->
+                    <div th:if="${reg.status == 'CONFIRMED'}">
+                        <hr class="divider"/>
+
+                        <!-- Feedback already submitted -->
+                        <div th:if="${reg.feedbackRating != null}">
+                            <div class="section-title" style="font-size:0.88rem;margin-bottom:0.5rem;">⭐ Your Feedback</div>
+                            <div class="star-rating" style="margin-bottom:0.4rem;">
+                                <span th:each="i : ${#numbers.sequence(1, 5)}"
+                                      th:class="${i <= reg.feedbackRating} ? 'star active' : 'star'"
+                                      style="cursor:default;">★</span>
+                                <span class="text-muted" style="font-size:0.8rem;margin-left:0.4rem;"
+                                      th:text="${reg.feedbackRating} + '/5'"></span>
+                            </div>
+                            <p class="text-muted" style="font-size:0.85rem;font-style:italic;"
+                               th:if="${reg.feedbackComment != null and reg.feedbackComment != ''}"
+                               th:text="'&quot;' + ${reg.feedbackComment} + '&quot;'"></p>
+                        </div>
+
+                        <!-- Submit feedback -->
+                        <div th:if="${reg.feedbackRating == null}">
+                            <div class="section-title" style="font-size:0.88rem;margin-bottom:0.5rem;">⭐ Rate This Event</div>
+                            <form th:action="@{/student/feedback/{id}(id=${reg.id})}" method="post">
+                                <div class="star-rating-group" style="margin-bottom:0.6rem;">
+                                    <div class="star-rating">
+                                        <span class="star" data-value="1" title="Poor">★</span>
+                                        <span class="star" data-value="2" title="Fair">★</span>
+                                        <span class="star" data-value="3" title="Good">★</span>
+                                        <span class="star" data-value="4" title="Very Good">★</span>
+                                        <span class="star" data-value="5" title="Excellent">★</span>
+                                    </div>
+                                    <input type="hidden" name="rating" value="0"/>
+                                </div>
+                                <textarea name="comment" class="form-control" rows="2"
+                                          placeholder="Share your experience (optional)..." maxlength="500"
+                                          style="font-size:0.85rem;"></textarea>
+                                <button type="submit" class="btn btn-warning btn-sm mt-1">Submit Feedback</button>
+                            </form>
+                        </div>
+
+                        <!-- Cancel -->
+                        <form th:action="@{/student/cancel/{id}(id=${reg.id})}" method="post"
+                              class="confirm-cancel" style="margin-top:0.75rem;">
+                            <button type="submit" class="btn btn-danger btn-sm">❌ Cancel Registration</button>
+                        </form>
+                    </div>
+
+                    <!-- CANCELLED state -->
+                    <div th:if="${reg.status == 'CANCELLED'}" class="alert alert-error"
+                         style="margin-top:0.75rem;font-size:0.85rem;">
+                        This registration was cancelled.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

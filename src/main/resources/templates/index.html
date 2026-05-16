@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Smart Campus EMS – Home</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main>
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-content">
+            <div class="hero-tag">🏫 College / University Platform</div>
+            <h1>Smart Campus<br/>Event Management</h1>
+            <p>Discover workshops, seminars, competitions and cultural events — all in one place. Register in seconds and stay connected with campus life.</p>
+            <div class="hero-badges">
+                <span class="hero-badge">📅 Browse Events</span>
+                <span class="hero-badge">🎫 Easy Registration</span>
+                <span class="hero-badge">⭐ Leave Feedback</span>
+                <span class="hero-badge">📊 Live Statistics</span>
+            </div>
+            <div class="hero-actions">
+                <a th:href="@{/events}" class="btn btn-white btn-lg">📅 Browse Events</a>
+                <a th:href="@{/signup}" class="btn btn-outline-white btn-lg" sec:authorize="isAnonymous()">✨ Sign Up Free</a>
+                <a th:href="@{/student/my-events}" class="btn btn-outline-white btn-lg" sec:authorize="hasRole('STUDENT')">📋 My Events</a>
+                <a th:href="@{/admin/dashboard}" class="btn btn-outline-white btn-lg" sec:authorize="hasRole('ADMIN')">⚙️ Admin Panel</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIVE STATS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number" th:text="${#lists.size(upcomingEvents)}">0</div>
+            <div class="stat-label">📅 Upcoming Events</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-number">6</div>
+            <div class="stat-label">🏢 Departments</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-number">5</div>
+            <div class="stat-label">🎯 Event Categories</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-number">100%</div>
+            <div class="stat-label">🎓 Campus Wide</div>
+        </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="section-block">
+        <div class="page-header">
+            <div>
+                <div class="page-title">🚀 How It Works</div>
+                <div class="page-subtitle">Three simple steps to get started</div>
+            </div>
+        </div>
+        <div class="how-grid">
+            <div class="how-card">
+                <div class="how-number">1</div>
+                <div class="how-icon">✨</div>
+                <div class="how-title">Create Account</div>
+                <div class="how-desc">Sign up with your name, email and department. Takes under a minute.</div>
+            </div>
+            <div class="how-card">
+                <div class="how-number">2</div>
+                <div class="how-icon">📅</div>
+                <div class="how-title">Browse Events</div>
+                <div class="how-desc">Filter by department, type or keyword. See dates, venues and available seats.</div>
+            </div>
+            <div class="how-card">
+                <div class="how-number">3</div>
+                <div class="how-icon">🎫</div>
+                <div class="how-title">Register &amp; Attend</div>
+                <div class="how-desc">One-click registration. View your events and leave feedback after attending.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPCOMING EVENTS PREVIEW -->
+    <div class="page-header">
+        <div>
+            <div class="page-title">🔥 Upcoming Events</div>
+            <div class="page-subtitle">Don't miss out on these exciting opportunities</div>
+        </div>
+        <a th:href="@{/events}" class="btn btn-outline">View All →</a>
+    </div>
+
+    <div class="cards-grid" th:if="${not #lists.isEmpty(upcomingEvents)}">
+        <div class="card" th:each="event : ${upcomingEvents}">
+            <div class="card-header"
+                 th:classappend="${event.eventType == 'Workshop'} ? '' :
+                                 (${event.eventType == 'Cultural'} ? 'purple' :
+                                 (${event.eventType == 'Competition'} ? 'green' :
+                                 (${event.eventType == 'Sports'} ? 'orange' : 'red')))">
+                <div class="card-type-label" th:text="${event.eventType}">Type</div>
+                <div class="event-title" th:text="${event.title}">Event Title</div>
+            </div>
+            <div class="card-body">
+                <p class="text-muted" th:text="${#strings.abbreviate(event.description, 110)}">Description</p>
+                <div class="event-meta mt-2">
+                    <span class="badge badge-blue">📅 <span th:text="${#temporals.format(event.eventDate,'dd MMM yyyy')}"></span></span>
+                    <span class="badge badge-green">📍 <span th:text="${event.venue}"></span></span>
+                    <span class="badge badge-orange">🏢 <span th:text="${event.department}"></span></span>
+                </div>
+                <div class="capacity-bar">
+                    <div class="capacity-label">
+                        <span th:text="${event.registeredCount}">0</span> / <span th:text="${event.totalCapacity}">0</span> registered
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar"
+                             th:attr="data-percent=${event.totalCapacity > 0 ? (event.registeredCount * 100 / event.totalCapacity) : 0}"></div>
+                    </div>
+                </div>
+                <a th:href="@{/events/{id}(id=${event.id})}" class="btn btn-primary btn-full mt-2">View Details →</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(upcomingEvents)}">
+        <span class="empty-icon">📭</span>
+        <p>No upcoming events at the moment. Check back soon!</p>
+        <a th:href="@{/admin/events/new}" class="btn btn-primary mt-2" sec:authorize="hasRole('ADMIN')">➕ Create First Event</a>
+    </div>
+
+    <!-- FEATURES SECTION -->
+    <div class="section-block" style="margin-top:3rem;">
+        <div class="page-header">
+            <div>
+                <div class="page-title">✅ Platform Features</div>
+                <div class="page-subtitle">Everything you need to manage campus events</div>
+            </div>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🔍</span>
+                <div class="feature-title">Smart Search &amp; Filters</div>
+                <div class="feature-desc">Filter events by department, type, date or keyword in real time.</div>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">✅</span>
+                <div class="feature-title">Form Validation</div>
+                <div class="feature-desc">All registration and event forms are validated on both client and server side.</div>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📊</span>
+                <div class="feature-title">Registration Statistics</div>
+                <div class="feature-desc">Admins see live charts — events by type, department, and top registrations.</div>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🔒</span>
+                <div class="feature-title">Role-Based Access</div>
+                <div class="feature-desc">Students and admins have separate dashboards with appropriate permissions.</div>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">⭐</span>
+                <div class="feature-title">Feedback System</div>
+                <div class="feature-desc">Students rate events 1–5 stars and leave comments after attending.</div>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🌐</span>
+                <div class="feature-title">REST API</div>
+                <div class="feature-desc">Full JSON API at <code>/api/events</code> for external integrations.</div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

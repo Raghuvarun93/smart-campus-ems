@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Students – Campus EMS Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main>
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <div class="page-header">
+        <div>
+            <div class="page-title">👥 Registered Students</div>
+            <div class="page-subtitle">Search, view and manage all campus student profiles</div>
+        </div>
+        <a th:href="@{/admin/dashboard}" class="btn btn-outline">← Dashboard</a>
+    </div>
+
+    <!-- ── Search / Filter Bar ── -->
+    <form th:action="@{/admin/students}" method="get" id="studentFilterForm">
+        <div class="filter-bar">
+
+            <div class="form-group" style="flex:2;">
+                <label class="form-label">🔍 Search</label>
+                <input type="text" name="keyword" class="form-control"
+                       placeholder="Search by name or email..."
+                       th:value="${keyword}"
+                       onkeydown="searchOnEnter(event,'studentFilterForm')"/>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">🏢 Department</label>
+                <select name="department" class="form-control"
+                        onchange="document.getElementById('studentFilterForm').submit()">
+                    <option value="">All Departments</option>
+                    <option value="CSE"   th:selected="${department == 'CSE'}">CSE</option>
+                    <option value="ECE"   th:selected="${department == 'ECE'}">ECE</option>
+                    <option value="MECH"  th:selected="${department == 'MECH'}">MECH</option>
+                    <option value="CIVIL" th:selected="${department == 'CIVIL'}">CIVIL</option>
+                    <option value="MBA"   th:selected="${department == 'MBA'}">MBA</option>
+                    <option value="MCA"   th:selected="${department == 'MCA'}">MCA</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">📅 Year</label>
+                <select name="year" class="form-control"
+                        onchange="document.getElementById('studentFilterForm').submit()">
+                    <option value="">All Years</option>
+                    <option value="1st Year" th:selected="${year == '1st Year'}">1st Year</option>
+                    <option value="2nd Year" th:selected="${year == '2nd Year'}">2nd Year</option>
+                    <option value="3rd Year" th:selected="${year == '3rd Year'}">3rd Year</option>
+                    <option value="4th Year" th:selected="${year == '4th Year'}">4th Year</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="align-self:flex-end;">
+                <button type="submit" class="btn btn-primary">🔍 Search</button>
+            </div>
+            <div class="form-group" style="align-self:flex-end;">
+                <a th:href="@{/admin/students}" class="btn btn-outline">✖ Clear</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Active filter summary -->
+    <div th:if="${(keyword != null and keyword != '') or (department != null and department != '') or (year != null and year != '')}"
+         style="margin-bottom:1rem;font-size:0.88rem;color:var(--gray-600);display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+        <strong>Active filters:</strong>
+        <span class="badge badge-blue" th:if="${keyword != null and keyword != ''}">Search: "<span th:text="${keyword}"></span>"</span>
+        <span class="badge badge-blue" th:if="${department != null and department != ''}">Dept: <span th:text="${department}"></span></span>
+        <span class="badge badge-blue" th:if="${year != null and year != ''}">Year: <span th:text="${year}"></span></span>
+        <span style="color:var(--gray-400);">— <strong th:text="${#lists.size(students)}"></strong> result(s)</span>
+    </div>
+
+    <!-- ── Stats Summary ── -->
+    <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin-bottom:1.5rem;">
+        <div class="stat-card">
+            <div class="stat-number" th:text="${#lists.size(students)}">0</div>
+            <div class="stat-label">👥 Students Shown</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-number"
+                 th:text="${regCounts != null ? #maps.size(regCounts) : 0}">0</div>
+            <div class="stat-label">🎫 Active Registrants</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-number"
+                 th:text="${department != null and department != '' ? department : 'ALL'}">ALL</div>
+            <div class="stat-label">🏢 Department Filter</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-number"
+                 th:text="${year != null and year != '' ? year : 'All'}">All</div>
+            <div class="stat-label">📅 Year Filter</div>
+        </div>
+    </div>
+
+    <!-- ── Students Table ── -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Year</th>
+                    <th>Phone</th>
+                    <th>Registrations</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="student, idx : ${students}">
+                    <td th:text="${idx.count}" style="color:var(--gray-400);font-size:0.82rem;"></td>
+                    <td>
+                        <div style="font-weight:600;color:var(--dark);" th:text="${student.name}"></div>
+                        <div class="text-muted" th:text="'ID: ' + ${student.id}"></div>
+                    </td>
+                    <td th:text="${student.email}"></td>
+                    <td><span class="badge badge-blue" th:text="${student.department}"></span></td>
+                    <td>
+                        <span class="badge badge-purple" th:if="${student.year != null and student.year != ''}"
+                              th:text="${student.year}"></span>
+                        <span class="text-muted" th:if="${student.year == null or student.year == ''}">—</span>
+                    </td>
+                    <td th:text="${student.phone != null and student.phone != '' ? student.phone : '—'}"></td>
+                    <td>
+                        <span style="font-weight:600;"
+                              th:text="${regCounts != null and regCounts[student.id] != null ? regCounts[student.id] : 0}">0</span>
+                        <span class="text-muted"> event(s)</span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a th:href="@{/admin/students/{id}(id=${student.id})}"
+                               class="btn btn-primary btn-sm" title="View Details">👁 View</a>
+                            <form th:action="@{/admin/students/{id}/delete(id=${student.id})}"
+                                  method="post" class="confirm-delete" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm" title="Delete Student">🗑️</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(students)}">
+                    <td colspan="8" style="text-align:center;color:var(--gray-400);padding:3rem;">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">👤</div>
+                        No students match your search.
+                        <a th:href="@{/admin/students}" style="color:var(--primary);font-weight:600;">Clear filters →</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

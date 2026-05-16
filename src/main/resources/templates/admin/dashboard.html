@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Dashboard – Campus EMS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main>
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <!-- ── Header ── -->
+    <div class="page-header">
+        <div>
+            <div class="page-title">⚙️ Admin Dashboard</div>
+            <div class="page-subtitle">Manage all campus events, registrations and students from here</div>
+        </div>
+        <a th:href="@{/admin/events/new}" class="btn btn-primary btn-lg">➕ Create New Event</a>
+    </div>
+
+    <!-- ── Live Stats ── -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number" th:text="${stats.totalEvents}">0</div>
+            <div class="stat-label">📅 Total Events</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-number" th:text="${stats.totalRegistrations != null ? stats.totalRegistrations : 0}">0</div>
+            <div class="stat-label">🎫 Total Registrations</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-number" th:text="${stats.upcomingCount}">0</div>
+            <div class="stat-label">🔥 Upcoming Events</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-number" th:text="${allStudents != null ? #lists.size(allStudents) : 0}">0</div>
+            <div class="stat-label">👤 Registered Students</div>
+        </div>
+    </div>
+
+    <!-- ── What Can Admin Do ── -->
+    <div class="admin-guide-box">
+        <div class="admin-guide-title">🛠️ What you can do as Admin</div>
+        <div class="admin-guide-grid">
+            <div class="admin-guide-item">
+                <span class="admin-guide-icon">➕</span>
+                <div>
+                    <strong>Create Events</strong>
+                    <p>Click <em>Create New Event</em> or go to Manage Events → New Event. Fill in title, description, date, venue, department, type and capacity.</p>
+                </div>
+            </div>
+            <div class="admin-guide-item">
+                <span class="admin-guide-icon">✏️</span>
+                <div>
+                    <strong>Edit Events</strong>
+                    <p>Go to Manage Events, find the event in the table and click <em>Edit</em>. You can also change the event status (Upcoming → Completed / Cancelled).</p>
+                </div>
+            </div>
+            <div class="admin-guide-item">
+                <span class="admin-guide-icon">🗑️</span>
+                <div>
+                    <strong>Delete Events</strong>
+                    <p>In the events table click the red delete button. A confirmation dialog will appear before the event is permanently removed.</p>
+                </div>
+            </div>
+            <div class="admin-guide-item">
+                <span class="admin-guide-icon">👥</span>
+                <div>
+                    <strong>View Registrations</strong>
+                    <p>Click the <em>Regs</em> button on any event to see every student who registered, their status and feedback rating.</p>
+                </div>
+            </div>
+            <div class="admin-guide-item">
+                <span class="admin-guide-icon">🔍</span>
+                <div>
+                    <strong>Search &amp; Filter Events</strong>
+                    <p>Use the filter bar on Manage Events to narrow by department, type, status, date range or keyword — all filters combine.</p>
+                </div>
+            </div>
+            <div class="admin-guide-item">
+                <span class="admin-guide-icon">📊</span>
+                <div>
+                    <strong>View Statistics</strong>
+                    <p>Go to Statistics for live charts — events by type, by department, by status — and a top-5 events leaderboard by registrations.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Quick Nav Cards ── -->
+    <div class="admin-nav-grid">
+        <a th:href="@{/admin/events/new}" class="admin-nav-card green">
+            <span class="admin-nav-icon">➕</span>
+            <div class="admin-nav-title">Create Event</div>
+            <div class="admin-nav-desc">Publish a new workshop, seminar or competition</div>
+        </a>
+        <a th:href="@{/admin/events}" class="admin-nav-card">
+            <span class="admin-nav-icon">📋</span>
+            <div class="admin-nav-title">Manage Events</div>
+            <div class="admin-nav-desc">Edit, delete and search all events</div>
+        </a>
+        <a th:href="@{/admin/statistics}" class="admin-nav-card purple">
+            <span class="admin-nav-icon">📊</span>
+            <div class="admin-nav-title">Statistics</div>
+            <div class="admin-nav-desc">Charts, analytics and top events</div>
+        </a>
+        <a th:href="@{/admin/students}" class="admin-nav-card orange">
+            <span class="admin-nav-icon">👥</span>
+            <div class="admin-nav-title">Students</div>
+            <div class="admin-nav-desc">View and search all registered students</div>
+        </a>
+    </div>
+
+    <!-- ── Upcoming Events Table ── -->
+    <div class="page-header" style="margin-top:0.5rem;">
+        <div class="section-title" style="margin-bottom:0;">🔥 Upcoming Events</div>
+        <a th:href="@{/admin/events}" class="btn btn-outline btn-sm">View All →</a>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Event Title</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Department</th>
+                    <th>Registrations</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="event, idx : ${upcomingEvents}">
+                    <td th:text="${idx.count}" style="color:var(--gray-400);font-size:0.82rem;"></td>
+                    <td>
+                        <div style="font-weight:600;" th:text="${event.title}"></div>
+                        <div class="text-muted">📍 <span th:text="${event.venue}"></span></div>
+                    </td>
+                    <td><span class="badge badge-blue" th:text="${event.eventType}"></span></td>
+                    <td>
+                        <div th:text="${#temporals.format(event.eventDate,'dd MMM yyyy')}"></div>
+                        <div class="text-muted" th:if="${event.startTime != null}"
+                             th:text="${#temporals.format(event.startTime,'hh:mm a')}"></div>
+                    </td>
+                    <td><span class="badge badge-orange" th:text="${event.department}"></span></td>
+                    <td>
+                        <div style="font-weight:600;" th:text="${event.registeredCount} + ' / ' + ${event.totalCapacity}"></div>
+                        <div class="progress-bar-container" style="margin-top:4px;">
+                            <div class="progress-bar"
+                                 th:attr="data-percent=${event.totalCapacity > 0 ? (event.registeredCount * 100 / event.totalCapacity) : 0}"></div>
+                        </div>
+                    </td>
+                    <td><span class="badge badge-green" th:text="${event.status}"></span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <a th:href="@{/admin/events/{id}/edit(id=${event.id})}"
+                               class="btn btn-warning btn-sm" title="Edit this event">✏️ Edit</a>
+                            <a th:href="@{/admin/events/{id}/registrations(id=${event.id})}"
+                               class="btn btn-primary btn-sm" title="View registrations">👥 Regs</a>
+                            <form th:action="@{/admin/events/{id}/delete(id=${event.id})}"
+                                  method="post" class="confirm-delete" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm" title="Delete event">🗑️</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(upcomingEvents)}">
+                    <td colspan="8" style="text-align:center;color:var(--gray-400);padding:2.5rem;">
+                        No upcoming events yet.
+                        <a th:href="@{/admin/events/new}" style="color:var(--primary);font-weight:600;">Create the first one →</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

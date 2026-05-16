@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${isEdit} ? 'Edit Event – Campus EMS' : 'New Event – Campus EMS'">Event Form</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main>
+    <div style="margin-bottom:1.25rem;">
+        <a th:href="@{/admin/events}" class="text-muted">← Back to Events</a>
+    </div>
+
+    <div class="form-card form-card-wide">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.25rem;">
+            <div style="font-size:2.5rem;" th:text="${isEdit} ? '✏️' : '➕'"></div>
+            <div>
+                <div class="form-title" th:text="${isEdit} ? 'Edit Event' : 'Create New Event'"></div>
+                <div class="form-subtitle" style="margin-bottom:0;"
+                     th:text="${isEdit} ? 'Update the event details below.' : 'Fill in all required fields to publish a new campus event.'"></div>
+            </div>
+        </div>
+
+        <hr class="divider"/>
+
+        <form th:action="${isEdit} ? @{/admin/events/{id}/edit(id=${event.id})} : @{/admin/events/new}"
+              method="post" th:object="${event}" novalidate>
+
+            <!-- ── Basic Info ── -->
+            <div class="form-section-label">📌 Basic Information</div>
+
+            <div class="form-group">
+                <label class="form-label">Event Title <span class="required">*</span></label>
+                <input type="text" th:field="*{title}" class="form-control"
+                       th:classappend="${#fields.hasErrors('title')} ? ' is-invalid'"
+                       placeholder="e.g. AI & Machine Learning Workshop"
+                       maxlength="150"/>
+                <span class="invalid-feedback" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description <span class="required">*</span></label>
+                <textarea th:field="*{description}" class="form-control" rows="4"
+                          th:classappend="${#fields.hasErrors('description')} ? ' is-invalid'"
+                          placeholder="Describe the event — agenda, prerequisites, what attendees will learn..."
+                          maxlength="1000"></textarea>
+                <span class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
+            </div>
+
+            <!-- ── Date & Time ── -->
+            <div class="form-section-label">📅 Date &amp; Time</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Event Date <span class="required">*</span></label>
+                    <input type="date" th:field="*{eventDate}" class="form-control"
+                           th:classappend="${#fields.hasErrors('eventDate')} ? ' is-invalid'"/>
+                    <span class="invalid-feedback" th:if="${#fields.hasErrors('eventDate')}" th:errors="*{eventDate}"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Venue <span class="required">*</span></label>
+                    <input type="text" th:field="*{venue}" class="form-control"
+                           th:classappend="${#fields.hasErrors('venue')} ? ' is-invalid'"
+                           placeholder="e.g. Seminar Hall A, Lab Block 2"/>
+                    <span class="invalid-feedback" th:if="${#fields.hasErrors('venue')}" th:errors="*{venue}"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Start Time</label>
+                    <input type="time" th:field="*{startTime}" class="form-control"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">End Time</label>
+                    <input type="time" th:field="*{endTime}" class="form-control"/>
+                </div>
+            </div>
+
+            <!-- ── Classification ── -->
+            <div class="form-section-label">🏷️ Classification</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Department <span class="required">*</span></label>
+                    <select th:field="*{department}" class="form-control"
+                            th:classappend="${#fields.hasErrors('department')} ? ' is-invalid'">
+                        <option value="">-- Select Department --</option>
+                        <option value="CSE">💻 CSE – Computer Science &amp; Engineering</option>
+                        <option value="ECE">📡 ECE – Electronics &amp; Communication</option>
+                        <option value="MECH">⚙️ MECH – Mechanical Engineering</option>
+                        <option value="CIVIL">🏗️ CIVIL – Civil Engineering</option>
+                        <option value="MBA">📈 MBA – Business Administration</option>
+                        <option value="MCA">🖥️ MCA – Computer Applications</option>
+                        <option value="ALL">🌐 ALL – All Departments</option>
+                    </select>
+                    <span class="invalid-feedback" th:if="${#fields.hasErrors('department')}" th:errors="*{department}"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Event Type <span class="required">*</span></label>
+                    <select th:field="*{eventType}" class="form-control"
+                            th:classappend="${#fields.hasErrors('eventType')} ? ' is-invalid'">
+                        <option value="">-- Select Type --</option>
+                        <option value="Workshop">🔧 Workshop</option>
+                        <option value="Seminar">🎤 Seminar</option>
+                        <option value="Competition">🏆 Competition</option>
+                        <option value="Cultural">🎭 Cultural</option>
+                        <option value="Sports">⚽ Sports</option>
+                    </select>
+                    <span class="invalid-feedback" th:if="${#fields.hasErrors('eventType')}" th:errors="*{eventType}"></span>
+                </div>
+            </div>
+
+            <!-- ── Capacity & Organizer ── -->
+            <div class="form-section-label">👥 Capacity &amp; Organizer</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Total Capacity <span class="required">*</span></label>
+                    <input type="number" th:field="*{totalCapacity}" class="form-control"
+                           min="1" max="1000"
+                           th:classappend="${#fields.hasErrors('totalCapacity')} ? ' is-invalid'"
+                           placeholder="e.g. 100"/>
+                    <span class="invalid-feedback" th:if="${#fields.hasErrors('totalCapacity')}" th:errors="*{totalCapacity}"></span>
+                    <small class="text-muted">Between 1 and 1000 seats.</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Organizer <span class="required">*</span></label>
+                    <input type="text" th:field="*{organizer}" class="form-control"
+                           th:classappend="${#fields.hasErrors('organizer')} ? ' is-invalid'"
+                           placeholder="e.g. Dr. Ramesh Kumar / Student Council"/>
+                    <span class="invalid-feedback" th:if="${#fields.hasErrors('organizer')}" th:errors="*{organizer}"></span>
+                </div>
+            </div>
+
+            <!-- ── Status (edit only) ── -->
+            <div class="form-group" th:if="${isEdit}">
+                <div class="form-section-label">📌 Event Status</div>
+                <select th:field="*{status}" class="form-control" style="max-width:280px;">
+                    <option value="UPCOMING">🟢 UPCOMING – Open for registration</option>
+                    <option value="ONGOING">🟡 ONGOING – Currently in progress</option>
+                    <option value="COMPLETED">⚫ COMPLETED – Event has ended</option>
+                    <option value="CANCELLED">🔴 CANCELLED – Event is cancelled</option>
+                </select>
+                <small class="text-muted">Changing to COMPLETED or CANCELLED will close registrations.</small>
+            </div>
+
+            <hr class="divider"/>
+
+            <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                <button type="submit" class="btn btn-primary btn-lg"
+                        th:text="${isEdit} ? '💾 Save Changes' : '✅ Create Event'">Submit</button>
+                <a th:href="@{/admin/events}" class="btn btn-outline btn-lg">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

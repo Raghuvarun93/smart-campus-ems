@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Registrations – Campus EMS Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main>
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <div style="margin-bottom:1.25rem;">
+        <a th:href="@{/admin/events}" class="text-muted">← Back to Events</a>
+    </div>
+
+    <div class="page-header">
+        <div>
+            <div class="page-title">👥 Event Registrations</div>
+            <div class="page-subtitle" th:text="${event.title} + ' · ' + ${event.department} + ' · ' + ${event.eventType}"></div>
+        </div>
+        <a th:href="@{/admin/events/{id}/edit(id=${event.id})}" class="btn btn-warning btn-sm">✏️ Edit Event</a>
+    </div>
+
+    <!-- Event Summary Stats -->
+    <div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin-bottom:1.5rem;">
+        <div class="stat-card">
+            <div class="stat-number" th:text="${event.registeredCount}">0</div>
+            <div class="stat-label">🎫 Registered</div>
+        </div>
+        <div class="stat-card green">
+            <div class="stat-number" th:text="${event.availableSeats}">0</div>
+            <div class="stat-label">💺 Available</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="stat-number" th:text="${event.totalCapacity}">0</div>
+            <div class="stat-label">👥 Capacity</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="stat-number"
+                 th:text="${event.totalCapacity > 0 ? #numbers.formatDecimal(event.registeredCount * 100.0 / event.totalCapacity, 0, 0) + '%' : '0%'}">0%</div>
+            <div class="stat-label">📊 Fill Rate</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" th:text="${#temporals.format(event.eventDate,'dd MMM')}">—</div>
+            <div class="stat-label">📅 Event Date</div>
+        </div>
+    </div>
+
+    <!-- Registrations Table -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Student Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Phone</th>
+                    <th>Registered On</th>
+                    <th>Status</th>
+                    <th>Feedback</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="reg, idx : ${registrations}">
+                    <td th:text="${idx.count}" style="color:var(--gray-400);font-size:0.82rem;"></td>
+                    <td>
+                        <div style="font-weight:600;" th:text="${reg.student.name}"></div>
+                        <a th:href="@{/admin/students/{id}(id=${reg.student.id})}"
+                           class="text-muted" style="font-size:0.78rem;">View profile →</a>
+                    </td>
+                    <td th:text="${reg.student.email}"></td>
+                    <td><span class="badge badge-blue" th:text="${reg.student.department}"></span></td>
+                    <td th:text="${reg.student.phone != null ? reg.student.phone : '—'}"></td>
+                    <td th:text="${#temporals.format(reg.registeredAt,'dd MMM yyyy HH:mm')}"></td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${reg.status == 'CONFIRMED'} ? 'badge-green' : 'badge-red'"
+                              th:text="${reg.status}"></span>
+                    </td>
+                    <td>
+                        <div th:if="${reg.feedbackRating != null}">
+                            <span th:each="i : ${#numbers.sequence(1, reg.feedbackRating)}">⭐</span>
+                            <div class="text-muted" style="font-size:0.78rem;"
+                                 th:if="${reg.feedbackComment != null and reg.feedbackComment != ''}"
+                                 th:text="${#strings.abbreviate(reg.feedbackComment, 40)}"></div>
+                        </div>
+                        <span th:if="${reg.feedbackRating == null}" class="text-muted">—</span>
+                    </td>
+                    <td>
+                        <form th:if="${reg.status == 'CONFIRMED'}"
+                              th:action="@{/admin/registrations/{rid}/cancel(rid=${reg.id})}"
+                              method="post" class="confirm-cancel" style="display:inline;">
+                            <input type="hidden" name="eventId" th:value="${event.id}"/>
+                            <button type="submit" class="btn btn-danger btn-sm">❌ Cancel</button>
+                        </form>
+                        <span th:if="${reg.status != 'CONFIRMED'}" class="text-muted">—</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(registrations)}">
+                    <td colspan="9" style="text-align:center;color:var(--gray-400);padding:3rem;">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">📭</div>
+                        No registrations yet for this event.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

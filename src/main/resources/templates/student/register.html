@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Student Registration - Campus EMS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main>
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <div class="form-card">
+        <div class="form-title">👤 Student Registration</div>
+        <div class="form-subtitle">Create your campus profile to register for events</div>
+
+        <form th:action="@{/student/register}" method="post" th:object="${student}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Full Name *</label>
+                    <input type="text" th:field="*{name}" class="form-control"
+                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                           placeholder="e.g. Varun Kumar"/>
+                    <span class="invalid-feedback" th:if="${#fields.hasErrors('name')}"
+                          th:errors="*{name}"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address *</label>
+                    <input type="email" th:field="*{email}" class="form-control"
+                           th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                           placeholder="you@campus.edu"/>
+                    <span class="invalid-feedback" th:if="${#fields.hasErrors('email')}"
+                          th:errors="*{email}"></span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Department *</label>
+                    <select th:field="*{department}" class="form-control"
+                            th:classappend="${#fields.hasErrors('department')} ? 'is-invalid'">
+                        <option value="">-- Select Department --</option>
+                        <option value="CSE">Computer Science & Engineering</option>
+                        <option value="ECE">Electronics & Communication</option>
+                        <option value="MECH">Mechanical Engineering</option>
+                        <option value="CIVIL">Civil Engineering</option>
+                        <option value="MBA">Master of Business Admin</option>
+                        <option value="MCA">Master of Computer Applications</option>
+                    </select>
+                    <span class="invalid-feedback" th:if="${#fields.hasErrors('department')}"
+                          th:errors="*{department}"></span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Academic Year</label>
+                    <select th:field="*{year}" class="form-control">
+                        <option value="">-- Select Year --</option>
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="text" th:field="*{phone}" class="form-control"
+                       th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid'"
+                       placeholder="10-digit mobile number"/>
+                <span class="invalid-feedback" th:if="${#fields.hasErrors('phone')}"
+                      th:errors="*{phone}"></span>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-full btn-lg">
+                ✅ Register as Student
+            </button>
+            <div style="text-align:center;margin-top:1rem;">
+                <a th:href="@{/events}" class="text-muted">← Back to Events</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>
